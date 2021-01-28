@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import json
 import csv
 import pymongo
+import re
 
 ##=========================== CONFIG =====================================
 global dbName, MONGODB_URL
@@ -10,7 +11,7 @@ global headers, url
 MONGODB_URL = "mongodb://localhost:27017"
 
 ##=========================== CONST =====================================
-path_productID = "./data/product-id2.txt"
+path_productID = "./data/productID.txt"
 path_product = "./data/product.txt"
 path_product_csv = "./data/product.csv"
 
@@ -54,9 +55,14 @@ def get_product_id():
         
         for product in product_box:
             href = product.get("href")
-            product_id_temp = href[href.rindex("p") + 1:]
-            product_id = product_id_temp[:product_id_temp.rindex(".html")]
-            product_list.append(product_id)
+            pattern = 'p[0-9]{4,8}'
+            try:
+                  result = re.search(pattern,href).group()
+                  product_id = result[1:]
+                  print(product_id)
+                  product_list.append(product_id)
+            except:
+                  print("wrong, skip")
             
     print('get product id successfully!!!.')
     return product_list;
@@ -111,15 +117,14 @@ def checkExist(listItem,value = ''):
 
 ##=========================== MAIN =====================================
 
-product_list_id = get_product_id()
-print(product_list_id)
+##product_list_id = get_product_id()
 ##save_product_id(product_list_id)
 
-##product_list_id = read_product_id();
+product_list_id = read_product_id();
 ##
 product_list = crawl_product(product_list_id)
 insertIntoDB(product_list, 'products')
-##
+####
 review_list = crawl_review(product_list_id)
 parseReview(review_list)
 
